@@ -113,3 +113,10 @@ func main() {
 }
 
 // there is also another library goriall mux : a powerful HTTP router
+
+func SayHello(w http.ResponseWriter, r *http.Request) {
+	WriteJson(w, r.URL.Path+" hello")
+}
+func SayGoodbye(w http.ResponseWriter, r *http.Request) {
+	WriteJson(w, r.URL.Path+" goodbye")
+}
