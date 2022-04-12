@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type envelope map[string]interface{}
 type config struct {
 	port string
 	db   struct {
