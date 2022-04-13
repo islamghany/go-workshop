@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"database/sql"
+	"flag"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/islamghany/go-workshop/auth/internals/data"
 	_ "github.com/lib/pq"
+	"github.com/mailgun/mailgun-go/v4"
 )
 
 type envelope map[string]interface{}
@@ -17,11 +20,17 @@ type config struct {
 	db   struct {
 		dsn string
 	}
+	emailAPI struct {
+		domain string
+		apiKey string
+	}
 }
 
 type application struct {
 	models data.Models
 	config config
+	email  *mailgun.MailgunImpl
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -29,6 +38,11 @@ func main() {
 	conf := &config{
 		port: ":8000",
 	}
+
+	flag.StringVar(&conf.emailAPI.apiKey, "apiKey", "", "the Api key of the email services")
+	flag.StringVar(&conf.emailAPI.domain, "domain", "", "the domain the email services")
+	flag.Parse()
+
 	conf.db.dsn = "postgres://test:islamghany@localhost/test"
 	db, err := openDB(conf)
 	if err != nil {
@@ -38,11 +52,12 @@ func main() {
 	// main() function exits.
 	defer db.Close()
 
-	log.Println("database connection pool established")
+	log.Println("database connection pool established", conf)
 
 	app := &application{
 		config: *conf,
 		models: data.NewModels(db),
+		email:  mailgun.NewMailgun(conf.emailAPI.domain, conf.emailAPI.apiKey),
 	}
 
 	srv := http.Server{

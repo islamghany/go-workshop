@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, input interface{}) error {
@@ -119,4 +121,30 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data interf
 	w.WriteHeader(status)
 	w.Write(jsonData)
 	return nil
+}
+
+func (app *application) sendEmail(sender, subject, body, recipient string) (resp string, id string, err error) {
+	message := app.email.NewMessage(sender, subject, body, recipient)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	// Send the message with a 10 second timeout
+	resp, id, err = app.email.Send(ctx, message)
+	return resp, id, err
+}
+
+func (app *application) background(fn func()) {
+	// Increment the WaitGroup counter.
+	app.wg.Add(1)
+	go func() {
+		// Use defer to decrement the WaitGroup counter before the goroutine returns.
+		defer app.wg.Done()
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println(fmt.Errorf("%s", err), nil)
+			}
+		}()
+		fn()
+	}()
 }
