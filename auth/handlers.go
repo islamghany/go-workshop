@@ -26,6 +26,19 @@ func (app *application) hello(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world"))
 }
 
+/*
+Activating the user process
+
+-As part of the registration process for a new user we will create a cryptographically-secure random activation token that is impossible to guess.
+-We will then store a hash of this activation token in a new tokens table, alongside the new user’s ID and an expiry time for the token.
+-We will send the original (unhashed) activation token to the user in their welcome email.
+-The user subsequently submits their token to a new PUT /v1/users/activated endpoint.
+-If the hash of the token exists in the tokens table and hasn’t expired, then we’ll update the activated status for the relevant user to true.
+-Lastly, we’ll delete the activation token from our tokens table so that it can’t be used again.
+*/
+func (app *application) activeUserHandler(w http.ResponseWriter, r *http.Request) {
+
+}
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Create an anonymous struct to hold the expected data from the request body.
 	var input struct {
