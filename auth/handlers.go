@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/islamghany/go-workshop/auth/internals/data"
@@ -9,6 +11,18 @@ import (
 )
 
 func (app *application) hello(w http.ResponseWriter, r *http.Request) {
+	// sender := "sender@example.com"
+	// subject := "Fancy subject!"
+	// body := "Hello from Mailgun Go!"
+	// recipient := "ghany1999181@gmail.com"
+
+	// if err != nil {
+	// 	app.serverErrorResponse(w, r, err)
+	// 	return
+	// }
+
+	// fmt.Printf("ID: %s Resp: %s\n", id, resp)
+
 	w.Write([]byte("hello world"))
 }
 
@@ -69,6 +83,23 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
+
+	app.background(func() {
+		sender := "auth@example.com"
+		subject := "Activate Your Account!"
+		body := `
+		<h4>your acount activated link is: <a href="http://localhost/8000/users/activate/%s">here</a></h4>
+		<p>http://localhost/8000/users/activate/%s</p>
+		`
+		token := "ff"
+
+		_, _, err := app.sendEmail(sender, subject, fmt.Sprintf(body, token, token), user.Email)
+
+		if err != nil {
+			log.Println(err)
+		}
+
+	})
 
 	// Write a JSON response containing the user data along with a 201 Created status
 	// code.
