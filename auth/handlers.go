@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/islamghany/go-workshop/auth/internals/data"
 	"github.com/islamghany/go-workshop/auth/internals/validator"
@@ -96,7 +97,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 	app.background(func() {
 		sender := "auth@example.com"
 		subject := "Activate Your Account!"
@@ -104,9 +109,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		<h4>your acount activated link is: <a href="http://localhost/8000/users/activate/%s">here</a></h4>
 		<p>http://localhost/8000/users/activate/%s</p>
 		`
-		token := "ff"
 
-		_, _, err := app.sendEmail(sender, subject, fmt.Sprintf(body, token, token), user.Email)
+		_, _, err := app.sendEmail(sender, subject, fmt.Sprintf(body, token.Plaintext, token.Plaintext), user.Email)
 
 		if err != nil {
 			log.Println(err)
