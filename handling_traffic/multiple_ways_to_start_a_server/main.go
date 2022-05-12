@@ -1,12 +1,5 @@
 package main
 
-import (
-	"log"
-	"net/http"
-
-	"github.com/julienschmidt/httprouter"
-)
-
 // (DefaultServerMux) is a struct that implement the ServeHTTP
 // by dafault when we use DefaultServerMux by itself, it has a method called ServeHTTP
 // when we pass the pattern and the Hanlder func to HandlerFun,
@@ -104,19 +97,20 @@ import (
 	You can build efficient static file servers
 */
 
-func main() {
-	router := httprouter.New()
+// func main() {
+// 	router := httprouter.New()
 
-	router.HandlerFunc(http.MethodGet, "/", SayHello)
-	router.HandlerFunc(http.MethodGet, "/goodbye", SayGoodbye)
-	log.Fatal(http.ListenAndServe(":8000", router))
-}
+// 	router.HandlerFunc(http.MethodGet, "/", SayHello)
+// 	router.HandlerFunc(http.MethodGet, "/goodbye", SayGoodbye)
+// 	log.Fatal(http.ListenAndServe(":8000", router))
+// }
 
-// there is also another library goriall mux : a powerful HTTP router
+// // there is also another library goriall mux : a powerful HTTP router
 
-func SayHello(w http.ResponseWriter, r *http.Request) {
-	WriteJson(w, r.URL.Path+" hello")
-}
-func SayGoodbye(w http.ResponseWriter, r *http.Request) {
-	WriteJson(w, r.URL.Path+" goodbye")
-}
+// func SayHello(w http.ResponseWriter, r *http.Request) {
+// 	WriteJson(w, r.URL.Path+" hello")
+// }
+// func SayGoodbye(w http.ResponseWriter, r *http.Request) {
+// 	WriteJson(w, r.URL.Path+" goodbye")
+
+// }

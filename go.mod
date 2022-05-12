@@ -14,6 +14,7 @@ require (
 
 require (
 	github.com/CloudyKit/fastprinter v0.0.0-20200109182630-33d98a066a53 // indirect
+	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
