@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 
 	"net/http"
 )
@@ -32,46 +35,65 @@ import (
 
 // }
 
+const MAX_UPLOAD_SIZE = 1024 * 1024 * 2 // 2MB
+
 func uploadFile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	fmt.Println("File Upload Endpoint Hit")
 
+	r.Body = http.MaxBytesReader(w, r.Body, MAX_UPLOAD_SIZE)
 	// Parse our multipart form, 10 << 20 specifies a maximum
 	// upload of 10 MB files.
-	r.ParseMultipartForm(10 << 20)
+	if err := r.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
+		http.Error(w, "The uploaded file is too big. Please choose an file that's less than 1MB in size", http.StatusBadRequest)
+		return
+	}
 	// FormFile returns the first file for the given key `myFile`
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
-	file, handler, err := r.FormFile("myFile")
+	file, fileHeader, err := r.FormFile("file")
+	fmt.Println(r.MultipartForm.Value["sss"], r.MultipartForm.Value["ahmed"])
+
 	if err != nil {
-		fmt.Println("Error Retrieving the File")
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	defer file.Close()
 
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-	fmt.Printf("MIME Header: %+v\n", handler.Header)
+	// Create the uploads folder if it doesn't
+	// already exist
+	err = os.MkdirAll("./uploads", os.ModePerm)
 
-	// Create a temporary file within our temp-images directory that follows
-	// a particular naming pattern
-	tempFile, err := ioutil.TempFile("handling_traffic/upload_files/dir", "img-*.png")
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	defer tempFile.Close()
+	// Create a new file in the uploads directory
+	dst, err := os.Create(fmt.Sprintf("./uploads/%d%s", time.Now().UnixNano(), filepath.Ext(fileHeader.Filename)))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// read all of the contents of our uploaded file into a
-	// byte array
-	fileBytes, err := ioutil.ReadAll(file)
+	defer dst.Close()
+
+	fmt.Printf("Uploaded File: %+v\n", fileHeader.Filename)
+	fmt.Printf("File Size: %+v\n", fileHeader.Size)
+	fmt.Printf("MIME Header: %+v\n", fileHeader.Header)
+
+	//// Copy the uploaded file to the filesystem
+	// at the specified destination
+	_, err = io.Copy(dst, file)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	// write this byte array to our temporary file
-	tempFile.Write(fileBytes)
-	// return that we have successfully uploaded our file!
-	fmt.Fprintf(w, "Successfully Uploaded File\n")
+
+	fmt.Fprintf(w, "Upload successful")
 }
 
 func setupRoutes() {
